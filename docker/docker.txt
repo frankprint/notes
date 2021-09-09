@@ -1,0 +1,608 @@
+﻿
+docker使用版本
+docker version
+
+
+dokcer搜索镜像文件
+docker search xiaojian
+
+
+docker 下载镜像
+docker pull docker.io/hjd48/redhat
+
+
+docker使用镜像运行服务程序
+docker run docker.io/hjd48/redhat echo 'helloworld'
+
+
+docker安装软件
+docker run docker.io/centos yum install net-tools -y
+
+
+提交新的封装镜像
+docker commit fcfb0724019f xiaojian/test
+
+
+docker run xiaojian/testtwo ping 114.114.114.114
+
+
+查看docker容器的详细参数
+docker inspect 49655faee82e
+
+
+向云平台推镜像文件需要先搭建云服务器
+docker push /xiaojian/lihai
+
+
+检查平台
+ls -l /sys/class/misc/device-mapper/
+uname -a
+系统版本
+cat /etc/redhat-release
+
+docker 保持运行
+docker run -i -t xiaojian/testtwo /bin/bash
+
+
+
+docker ps 
+
+docker ps -a
+
+
+关闭所有的容器
+docker ps -a | awk '{print $1}'|grep -v CONTAINER | xargs docker stop
+
+删除所有的容器
+docker ps -a | awk '{print $1}'|grep -v CONTAINER | xargs docker rm 
+
+删除关闭的容器
+docker rm $(docker ps -qa)
+
+容器开机自启
+
+docker run -d -p 9000:9000 -v /var/run/docker.sock:/var/run/docker.sock -v portainer_data:/data --restart=always  portainer/portainer
+
+交互式打开容器
+docker start -i pensive_keller
+
+打开交互式界面在正在运行的容器
+docker attach pensive_keller
+
+
+挂载其他容器 数据卷容器
+
+docker run -it --name xiaojian_test --volumes-from 2a4d30c40d47 centos /bin/bash
+
+
+在后台执行程序
+docker run --name xiaojian -d images /bin/bash
+
+
+查看后台日志
+docker logs -f -t --tail=5  yunxing
+
+-f 保持更新 -t 时间 --tail 表示显示几行
+
+
+查看运行了哪些文件
+docker top yunxing
+
+另起一行程序运行
+docker exec -i -t yunxing /bin/bash
+
+停止容器
+docker stop xiaojian
+
+docker kill yunxing
+
+
+统一查看docker 容器的ip地址 已列表的形式展现
+
+
+docker ps -a |awk '{print $1}'|grep -v CONTAINER|xargs docker inspect --format='{{.NetworkSettings.IPAddress}}'
+
+docker ps -a |awk '{print $1}'|grep -v CONTAINER|xargs -I {} sh -c "docker inspect --format='{{.NetworkSettings.IPAddress}}' {} && echo {}"
+
+
+查看开放了哪些端口
+docker port web
+
+
+docker port web
+80/tcp -> 0.0.0.0:32768（随机映射到主机的端口）
+
+
+docker info
+查看docker信息
+
+注意查看根目录  
+Docker Root Dir: /var/lib/docker
+
+
+
+docker images
+
+
+docker images -a  显示中间层
+
+docker images --no-trunc 不截断docker的id ，显示id的所有长度
+
+docker images -q --no-trunc 返回images id 这一列的使用
+
+
+查看镜像详细信息
+docker inspect docker.io/centos:latest
+镜像名:标签
+
+
+删除镜像文件
+docker rmi xiaojian/testtwo
+
+删除镜像标签
+docker rmi docker.io/httpd:latest
+
+
+删除所有镜像（注意正在使用的镜像将不能被删除）
+docker rmi $(docker images -q)
+
+下载指定标签
+docker pull httpd:2.4.37-alpine
+
+
+
+docker login
+
+frank6688
+
+
+docker push frank6688/test
+
+
+
+只查3星找以上的仓库
+docker search -s 3 httpd
+
+
+docker配置（linux）
+cat /etc/sysconfig/docker
+
+
+
+docker 远程访问
+
+docker 在服务器上设置
+在vi /usr/lib/systemd/system/docker.service增加变量 DOCKER_OPTS
+
+部分内容如下
+$INSECURE_REGISTRY \
+          $REGISTRIES \
+          $DOCKER_OPTS
+		  
+		  
+		  
+在/etc/sysconfig/docker 文件中增加
+DOCKER_OPTS="-H unix:///var/run/docker.sock -H tcp://0.0.0.0:2375"
+
+
+
+
+
+
+在客户端使用
+DOCKER_HOST="tcp://0.0.0.0:2375" 
+
+运行则默认会调用服务器上的docker
+
+
+
+docker build 命令  -t 后面跟着创建的镜像名 .表示Dockerfile 的路径
+docker build -t xiaojians .
+
+显示构建过程
+docker history frank6688/jenkins
+
+
+dockerfile文件
+
+加载基础镜像
+FROM centos:latest
+作者信息
+MAINTAINER zhangyongjian "zhangyongjian@163.com"
+运行的指令
+RUN echo helloworld
+RUN yum install net-tools -y
+
+打开的端口（这里只是声明需要什么端口）在启动时需要加上参数-P  如:docker run -d -P frank6688/jenkins
+EXPOSE 80
+
+指定容器打开后的默认行为（注意当docker 初始化时）
+CMD echo helloworld
+
+实例：
+FROM centos:latest
+MAINTAINER zhangyongjian "zhangyongjian@163.com"
+RUN echo helloworld
+RUN yum install net-tools -y
+RUN echo helloworld
+EXPOSE 80
+CMD /bin/bash
+
+定义匿名 
+VOLUME ["/home/test1","/home/test2"]
+
+
+
+该指令用来替代CMD 它不会被默认的命令覆盖并且可以向搭建好的容器里传递参数例如 docker run xiaojian "lihai"
+
+ENTRYPOINT ["echo","xiaojian"]
+
+也可以在该函数下使用CMD
+ENTRYPOINT ["/usr/sbin/nginx", "-g", "daemon off;"]
+ 
+拷贝指令
+COPY index.html /var/www/html
+
+WORKDIR /path/to/workdir
+
+
+ENA <key> <value>
+
+ENA key=value
+
+
+USER xiaojian  以xiaojian 用户来运行
+
+ONBUILD 触发器
+
+
+
+
+
+
+
+
+
+
+docker 网桥
+
+
+安装网桥管理工具
+yum install bridge-utils
+
+
+网桥状态
+brctl show 
+
+修改网桥的IP地址
+ifconfig docker0 192.168.200.1 netmask 255.255.255.0
+
+在/etc/sysconfig/docker 中添加 docker 网桥参数
+
+-b=br0
+
+
+
+添加网桥
+brctl addbr br0 
+
+ifconfig br0 192.168.200.1 netmask 255.255.255.0
+
+
+重启docker服务
+
+
+添加一个link 连接到cct1 如果cct1没有启动 那么cct2 就启动不了 （官方已经不推荐使用有新的替代方法 docker  network ）事实上是添加了host文件以及一些环境变量
+
+docker run -it  --name cct2 --link=cct1:test frank6688/network:v1.0.1 /bin/bash
+
+
+创建docker网络
+docker network create wp-net
+
+
+创建swarm 网络
+attachable 表示其他网络可见的
+docker network create --driver overlay --attachable my-net
+
+
+添加容器到网络
+						    加入网络		 显示别名也可以不写默认是机器名   镜像   命令
+docker run -it  --name cct4 --network wp-net --network-alias cct4   frank6688/network:v1.0.1 /bin/bash
+
+另一种网络互联的方法 --link（在容器启动前，检测link的容器必须打开否则容器将不能开启）
+docker run --link= cct1:别名 (这里cct1表示容器) mysql
+其实这里link是添加了host文件（除非必要，否则不建议使用该方法）
+
+参考地址：https://blog.csdn.net/zsl129/article/details/53939646
+
+
+
+iptables概念
+
+iptables是默认防火墙 也是docker可以实现多容器网络连接的基础
+
+查看docker网络规则
+iptables  -t filter -L -n
+
+有多少网络端口暴露就有多少连接
+Chain DOCKER (3 references)
+target     prot opt source               destination         
+ACCEPT     tcp  --  0.0.0.0/0            192.168.200.4        tcp dpt:80
+ACCEPT     tcp  --  0.0.0.0/0            192.168.200.5        tcp dpt:80
+
+
+静止局域网的其他机器 访问 暴露的端口。
+iptables -I DOCKER -s 192.168.1.112 -d 192.168.200.4 -p TCP --dport 80 -j DROP
+
+
+Chain DOCKER (3 references)
+target     prot opt source               destination         
+DROP       tcp  --  192.168.1.112        192.168.200.4        tcp dpt:80
+ACCEPT     tcp  --  0.0.0.0/0            192.168.200.4        tcp dpt:80
+ACCEPT     tcp  --  0.0.0.0/0            192.168.200.5        tcp dpt:80
+
+
+
+iptables -L DOCKER --line-numbers  查看docker规则列表
+
+
+iptables -D DOCKER 1
+
+
+添加外部数据 （数据卷）当内部无目录时会自动创建一个（不需要添加获取最高权限的参数可修改）
+
+docker run -it --name cct7 -v /home:/home/data frank6688/network:v1.0.1 /bin/bash
+
+
+添加只读的权限:ro
+
+docker run -it --name cct8 -v /home:/home/data:ro frank6688/network:v1.0.1 /bin/bash
+
+
+
+添加容器数据卷 这里--volumes-from test 是指test容器 test容器挂载的是匿名数据卷
+docker run -it --name testtwo --volumes-from test centos /bin/bash
+
+
+-v表示同时删除挂载的数据卷
+
+docker rm -v dvt8
+
+
+
+swarm项目
+
+
+添加管理节点
+
+docker swarm init --advertise-addr 192.168.1.109
+
+
+docker swarm init --advertise-addr 192.168.1.109:2377  --listen-addr 192.168.1.109:2377
+
+
+查看管理节点token
+docker swarm join-token manager
+
+
+查看受管节点的token
+docker swarm join-token worker
+
+查看 节点列表
+docker node ls
+
+docker service create --replicas 1 --name helloworld alpine ping docker.com
+
+docker service ls
+
+关于docker service 更新 加上image参数将会重新下载检查该镜像。
+
+docker service update --force --image frank6688/test1  xiaojian_test1
+
+docker 查看服务详细信息
+docker service inspect --pretty helloworld
+
+相当于docker ps -a
+docker service ps helloworld
+
+
+退出集群（管理员）
+docker swarm leave --force
+
+离开集群（普通节点）
+docker swarm leave
+
+查看在集群运行的情况
+docker service ps test
+
+更改需要运行实例的个数（可用于创建完毕后执行多少个服务）
+docker service scale test=1
+
+删除服务
+docker service rm helloworld
+
+设置主机名
+hostnamectl set-hostname main
+
+
+docker compose 单机模式
+
+docker-compose up -d 后台执行
+
+
+对于需要执行构建的compose文件而言。
+
+docker-compose up -d --build
+
+
+
+
+
+
+docekr-compose 与swarm 结合使用
+
+
+docker stack deploy --compose-file "/home/docker/docker-compose.yml" xiaojian
+
+xiaojian为容器名所以container_name 属性值无效
+
+
+docker 移除 docker-compose项目
+
+docker stack down xiaojian（除此之外也可以使用其他命令删除）
+
+
+有关于compose 文件概述
+
+参数
+deploy:
+  replicas: 6    				执行的数量
+  update_config:  				更新的动作
+    parallelism: 2				服务中多个容器同时更新
+    delay: 10s					设置每组容器更新之间的延迟时间
+	failure_action: pause       一般不用设置默认值是pause 失败时的动作
+  restart_policy:
+    condition: on-failure
+ 
+	结论：从目前得到的资料分析得知docekr-compose 更新几代  在第三代上添加了deploy选项 它对应有一些
+参数 ，当docker使用docker-compose up或者docker-compose run时docker将不会载入deploy参数。所以其他参
+数可以参考基本docker-composer的内容。
+
+
+把节点从工作状态卸载所有任务。用于调试等
+
+docker node update --availability drain weblogic-managed
+
+
+重新加入节点
+docker node update --availability active weblogic-managed
+
+
+注意以上操作会导致节点负载无法从临时增加（代工作的）服务商上删除多余分配的docker 手动可以关闭删除（有时间可以去寻找解决方法）
+
+结论：可能是谁把它踢出去，谁就会临时承担它的工作任务。
+
+
+重启docker服务 service
+docker service scale frontend=50
+
+
+将节点升级为manager
+
+docker node promote docker-118
+
+将节点降级为worker
+
+docker node demote docker-118
+
+
+
+建立私有仓库 简单版
+
+docker run -d -p 5000:5000 registry
+
+略过https安全验证在
+cat /etc/docker/daemon.json 
+
+{
+ "insecure-registries": ["192.168.1.89:5000"]
+}
+
+修改镜像名称：
+例如：
+docker tag frank6688/testtwo:latest 192.168.1.89:5000/frank6688/testtwo:latest
+
+然后docker push 192.168.1.89:5000/frank6688/testtwo:latest
+
+在南瑞，系统中实际操作应该为
+一、下载镜像包到本地 （内网） 
+二、拷贝到外网的机器上传镜像
+三、修改镜像名为外网的仓库地址云云。然后又push上去。
+
+
+查看远程仓库有哪些仓库
+http://192.168.1.89:5000/v2/_catalog
+
+
+
+批量删除失败的镜像
+
+docker ps -a|grep Exited|awk '{print $1}'|xargs docker rm 
+
+
+
+
+
+Docker run -i -t  --name=xiaojian image  /bin/bash
+守护式Docker
+Docker start name
+Docker attach name
+后台执行命令
+docker run -d --name=testtwo -d centos /bin/sh -c "while true; do echo hello world; sleep 1; done"
+ 
+docker logs -tf --tail 10  testtwo
+ 
+查看
+docker top testtwo
+打开一个新的会话
+docker exec -i -t testone /bin/bash
+查看配置信息
+docker inspect bdaf21f3d558
+ 
+查看有多少镜像
+ 
+docker images
+ 
+docker images --no-trunc
+ 
+docker images -a
+删除所有镜像
+ 
+docker rmi  ea4c82dcd15a
+ 
+下载
+docker pull docker.io/centos/python-35-centos7
+ 
+创建一个镜像 
+docker commit -a 'zhangyongjian' -m '/home/xiaojian.txt' dajian testone/dajian
+ 
+查看版本
+ docker --version
+
+ docker info
+查看容器
+docker container ls -a
+docker ps -a
+
+添加本地卷
+docker run -it -v /wenjianjia:/wenjianjia --privileged=true centostest1 /bin/bash
+
+
+创建数据卷容器
+
+docker run -v /var/volume1 -v /var/volume2 --name xqsj_Container centos /bin/bash
+
+挂载数据容器 xqsj_Container
+docker run -t -i  --volumes-from xqsj_Container  centos /bin/bash
+
+建立数据容器
+ docker run -it -v /home/dajian:/dajian  --privileged=true -v /home/xiaojian -v /home/dajian --name data centos /bin/bash
+
+Docker 从虚拟机上拷贝到主机上 后面的是主机地址
+docker cp 36ec408fc88f:/home /home/xiaojians
+
+
+Docker导出容器文件
+
+docker export centos > ./centos.tar
+Docker save -o xiaojian.tar xiaojian
+
+
+Docekr导入镜像
+
+docker import centos.tar test/centos
+  Docker load -i xiaojian.tar 
+
+
+
